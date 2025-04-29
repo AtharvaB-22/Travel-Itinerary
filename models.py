@@ -58,6 +58,7 @@ class Transfer(Base):
     day_transfers = relationship("DayTransfer", back_populates="transfer")
 
 # Activity Model
+# filepath: d:\Full Stack Projects\Travel-Itinerary\Backend\models.py
 class Activity(Base):
     __tablename__ = "activities"
     id = Column(Integer, primary_key=True)
@@ -71,7 +72,7 @@ class Activity(Base):
     )
 
     location = relationship("Location", back_populates="activities")
-    day_activities = relationship("DayActivity", back_populates="day_activities")
+    day_activities = relationship("DayActivity", back_populates="activity")  # Add this line
 
 # Itinerary Model
 class Itinerary(Base):
@@ -87,6 +88,7 @@ class Itinerary(Base):
     days = relationship("Day", back_populates="itinerary")
 
 # Day Model
+# filepath: d:\Full Stack Projects\Travel-Itinerary\Backend\models.py
 class Day(Base):
     __tablename__ = "days"
     id = Column(Integer, primary_key=True)
@@ -105,7 +107,7 @@ class Day(Base):
     itinerary = relationship("Itinerary", back_populates="days")
     accommodation = relationship("Accommodation", back_populates="days")
     day_transfers = relationship("DayTransfer", back_populates="day")
-    day_activities = relationship("DayActivity", back_populates="day")
+    day_activities = relationship("DayActivity", back_populates="day")  # Add this line
 
 # DayTransfer Model (Junction Table)
 class DayTransfer(Base):
@@ -124,7 +126,7 @@ class DayTransfer(Base):
     day = relationship("Day", back_populates="day_transfers")
     transfer = relationship("Transfer", back_populates="day_transfers")
 
-# DayActivity Model (Junction Table)
+# filepath: d:\Full Stack Projects\Travel-Itinerary\Backend\models.py
 class DayActivity(Base):
     __tablename__ = "day_activities"
     id = Column(Integer, primary_key=True)
@@ -138,5 +140,5 @@ class DayActivity(Base):
         Index('idx_day_activity_activity_id', 'activity_id'),
     )
 
-    day = relationship("Day", back_populates="day_activities")
-    activity = relationship("Activity", back_populates="day_activities")
+    day = relationship("Day", back_populates="day_activities")  # Ensure this matches Day model
+    activity = relationship("Activity", back_populates="day_activities")  # Ensure this matches Activity model
