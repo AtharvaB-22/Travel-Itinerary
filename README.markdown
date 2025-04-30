@@ -21,9 +21,8 @@ Follow these steps to get the project running on your computer:
 1. **Copy the Project**  
    Open your terminal and type this to download my project:
    ```
-   git clone <your-repo-url>
+   git clone https://github.com/AtharvaB-22/Travel-Itinerary
    ```
-   Replace `<your-repo-url>` with the link to my GitHub repo.
 
 2. **Go to the Project Folder**  
    Move into the project folder by typing:
@@ -88,10 +87,6 @@ The detailed plans for 2 to 8 days include:
 - How to get around, like using taxis or boats.
 
 For example, a 2-day plan in Phuket might tell you to visit Patong Beach, eat at a place called Nikita’s, and stay at a hotel like Selina Phuket.
-
-## Problems I Had
-- Sometimes the database didn’t save data the right way. I had to check my code and fix the tables to make it work.
-- The links were slow at first because I was loading too much data. I changed the code to load things one at a time, and it got faster.
 
 ## What’s Next
 I want to make this project better later by:
