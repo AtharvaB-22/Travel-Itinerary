@@ -95,6 +95,27 @@ async def get_itinerary(itinerary_id: int):
             recommended_for_nights=itinerary.recommended_for_nights,
             days=[DayResponse(id=d.id, day_number=d.day_number, accommodation_id=d.accommodation_id) for d in itinerary.days]
         )
+        
+@app.get("/recommend/{nights}", response_model=FullItineraryResponse)
+async def recommend_itinerary(nights: int):
+    with Session(engine) as session:
+        # Validate nights is positive
+        if nights <= 0:
+            raise HTTPException(status_code=400, detail="Number of nights must be positive")
+
+        # Find an itinerary with matching recommended_for_nights
+        itinerary = session.query(Itinerary).filter(Itinerary.recommended_for_nights == nights).first()
+        if not itinerary:
+            raise HTTPException(status_code=404, detail=f"No recommended itinerary found for {nights} nights")
+
+        return FullItineraryResponse(
+            id=itinerary.id,
+            name=itinerary.name,
+            start_date=itinerary.start_date,
+            total_nights=itinerary.total_nights,
+            recommended_for_nights=itinerary.recommended_for_nights,
+            days=[DayResponse(id=d.id, day_number=d.day_number, accommodation_id=d.accommodation_id) for d in itinerary.days]
+        )
 
 if __name__ == "__main__":
     import uvicorn
