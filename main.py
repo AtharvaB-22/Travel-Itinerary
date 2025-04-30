@@ -3,10 +3,10 @@ from databases import Database
 from config import DATABASE_URL
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
-from models import Base, Itinerary, Day, Accommodation
-from schemas import ItineraryCreate, FullItineraryResponse, DayResponse
-from datetime import datetime
-
+from models import Base, Itinerary, Day
+from schemas import ItineraryCreate, FullItineraryResponse, DetailedItineraryResponse
+from itineraries import itineraries
+from typing import List
 
 app = FastAPI()
 database = Database(DATABASE_URL)
@@ -28,11 +28,9 @@ async def shutdown():
 @app.post("/itineraries", response_model=FullItineraryResponse)
 async def create_itinerary(itinerary_data: ItineraryCreate):
     with Session(engine) as session:
-        # Validate total_nights is positive
         if itinerary_data.total_nights <= 0:
             raise HTTPException(status_code=400, detail="total_nights must be positive")
 
-        # Create new itinerary
         new_itinerary = Itinerary(
             name=itinerary_data.name,
             start_date=itinerary_data.start_date,
@@ -40,11 +38,10 @@ async def create_itinerary(itinerary_data: ItineraryCreate):
             recommended_for_nights=itinerary_data.recommended_for_nights
         )
         session.add(new_itinerary)
-        session.flush()  # Get the itinerary ID
+        session.flush()
 
-        # Create days for the itinerary
         days = [
-            Day(itinerary_id=new_itinerary.id, day_number=i + 1, accommodation_id=1)  # Default to accommodation_id 1 for now
+            Day(itinerary_id=new_itinerary.id, day_number=i + 1, accommodation_id=1)
             for i in range(itinerary_data.total_nights)
         ]
         session.add_all(days)
@@ -52,8 +49,6 @@ async def create_itinerary(itinerary_data: ItineraryCreate):
         session.commit()
         session.refresh(new_itinerary)
 
-        # Load days for response
-        session.refresh(new_itinerary)
         return FullItineraryResponse(
             id=new_itinerary.id,
             name=new_itinerary.name,
@@ -64,7 +59,7 @@ async def create_itinerary(itinerary_data: ItineraryCreate):
         )
 
 # Endpoint to list all itineraries
-@app.get("/itineraries", response_model=list[FullItineraryResponse])
+@app.get("/itineraries", response_model=List[FullItineraryResponse])
 async def get_itineraries():
     with Session(engine) as session:
         itineraries = session.query(Itinerary).all()
@@ -91,31 +86,46 @@ async def get_itinerary(itinerary_id: int):
             id=itinerary.id,
             name=itinerary.name,
             start_date=itinerary.start_date,
-            total_nights=itinerary.total_nights,
-            recommended_for_nights=itinerary.recommended_for_nights,
-            days=[DayResponse(id=d.id, day_number=d.day_number, accommodation_id=d.accommodation_id) for d in itinerary.days]
+            total_nights=it.total_nights,
+            recommended_for_nights=it.recommended_for_nights,
+            days=[DayResponse(id=d.id, day_number=d.day_number, accommodation_id=d.accommodation_id) for d in it.days]
         )
-        
-@app.get("/recommend/{nights}", response_model=FullItineraryResponse)
+
+# Updated endpoint for recommended itineraries with detailed data
+@app.get("/recommend/{nights}", response_model=DetailedItineraryResponse)
 async def recommend_itinerary(nights: int):
-    with Session(engine) as session:
-        # Validate nights is positive
-        if nights <= 0:
-            raise HTTPException(status_code=400, detail="Number of nights must be positive")
+    if nights < 2 or nights > 8:
+        raise HTTPException(status_code=400, detail="Duration must be between 2 and 8 nights")
 
-        # Find an itinerary with matching recommended_for_nights
-        itinerary = session.query(Itinerary).filter(Itinerary.recommended_for_nights == nights).first()
-        if not itinerary:
-            raise HTTPException(status_code=404, detail=f"No recommended itinerary found for {nights} nights")
+    nights_str = str(nights)
+    if nights_str not in itineraries:
+        raise HTTPException(status_code=404, detail=f"No recommended itinerary found for {nights} nights")
 
-        return FullItineraryResponse(
-            id=itinerary.id,
-            name=itinerary.name,
-            start_date=itinerary.start_date,
-            total_nights=itinerary.total_nights,
-            recommended_for_nights=itinerary.recommended_for_nights,
-            days=[DayResponse(id=d.id, day_number=d.day_number, accommodation_id=d.accommodation_id) for d in itinerary.days]
-        )
+    itinerary_data = itineraries[nights_str]
+    location = "combined" if "combined" in itinerary_data else "phuket" if nights <= 3 else "krabi"
+    return DetailedItineraryResponse(
+        duration=nights,
+        location=location,
+        itinerary=itinerary_data[location]
+    )
+
+# New endpoint for detailed itineraries
+@app.get("/itineraries/detailed/{nights}", response_model=DetailedItineraryResponse)
+async def get_detailed_itinerary(nights: int):
+    if nights < 2 or nights > 8:
+        raise HTTPException(status_code=400, detail="Duration must be between 2 and 8 nights")
+
+    nights_str = str(nights)
+    if nights_str not in itineraries:
+        raise HTTPException(status_code=404, detail=f"No itinerary found for {nights} nights")
+
+    itinerary_data = itineraries[nights_str]
+    location = "combined" if "combined" in itinerary_data else "phuket" if nights <= 3 else "krabi"
+    return DetailedItineraryResponse(
+        duration=nights,
+        location=location,
+        itinerary=itinerary_data[location]
+    )
 
 if __name__ == "__main__":
     import uvicorn
