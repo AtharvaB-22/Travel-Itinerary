@@ -4,7 +4,7 @@ from config import DATABASE_URL
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from models import Base, Itinerary, Day
-from schemas import ItineraryCreate, FullItineraryResponse, DetailedItineraryResponse
+from schemas import ItineraryCreate, FullItineraryResponse, DetailedItineraryResponse, DayResponse
 from itineraries import itineraries
 from typing import List
 
@@ -86,28 +86,17 @@ async def get_itinerary(itinerary_id: int):
             id=itinerary.id,
             name=itinerary.name,
             start_date=itinerary.start_date,
-            total_nights=it.total_nights,
-            recommended_for_nights=it.recommended_for_nights,
-            days=[DayResponse(id=d.id, day_number=d.day_number, accommodation_id=d.accommodation_id) for d in it.days]
+            total_nights=itinerary.total_nights,  # Fix: Use 'itinerary' instead of 'it'
+            recommended_for_nights=itinerary.recommended_for_nights,
+            days=[
+                DayResponse(
+                    id=d.id,
+                    day_number=d.day_number,
+                    accommodation_id=d.accommodation_id
+                )
+                for d in itinerary.days
+            ]
         )
-
-# Updated endpoint for recommended itineraries with detailed data
-@app.get("/recommend/{nights}", response_model=DetailedItineraryResponse)
-async def recommend_itinerary(nights: int):
-    if nights < 2 or nights > 8:
-        raise HTTPException(status_code=400, detail="Duration must be between 2 and 8 nights")
-
-    nights_str = str(nights)
-    if nights_str not in itineraries:
-        raise HTTPException(status_code=404, detail=f"No recommended itinerary found for {nights} nights")
-
-    itinerary_data = itineraries[nights_str]
-    location = "combined" if "combined" in itinerary_data else "phuket" if nights <= 3 else "krabi"
-    return DetailedItineraryResponse(
-        duration=nights,
-        location=location,
-        itinerary=itinerary_data[location]
-    )
 
 # New endpoint for detailed itineraries
 @app.get("/itineraries/detailed/{nights}", response_model=DetailedItineraryResponse)
