@@ -65,7 +65,6 @@ Once the server is running, you can use these links to do different things:
   - Example: `{"name": "My Phuket Trip", "start_date": "2023-12-01T00:00:00", "total_nights": 3, "recommended_for_nights": 3}`
 - **See All Trip Plans**: Go to `http://localhost:8000/itineraries` to see a list of all plans.
 - **Look at One Trip Plan**: Use `http://localhost:8000/itineraries/{id}` to see one plan. Replace `{id}` with the plan’s number, like `1`.
-- **Get a Recommended Plan**: Use `http://localhost:8000/recommend/{nights}` to get a plan for a certain number of days. For example, `http://localhost:8000/recommend/2` gives a 2-day plan.
 - **Get a Detailed Plan**: Use `http://localhost:8000/itineraries/detailed/{nights}` to see a full plan with things to do, places to stay, where to eat, and how to get around. For example, `http://localhost:8000/itineraries/detailed/3` gives a 3-day plan.
 
 You can test these links using a tool like curl or Postman, or visit `http://localhost:8000/docs` to try them in your browser.
